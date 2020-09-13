@@ -1,0 +1,18 @@
+### Admin blog app API
+GET http://localhost:5000/api/blog
+Content-Type: application/json
+
+### User authentication API - Get user
+GET http://localhost:5000/api/userauth
+Content-Type: application/json
+
+
+### User authentication API -  Create new user
+POST https://localhost:5000/api/userauth
+Content-Type: application/json
+
+{
+    "name": "rainier33",
+    "email": "rainierleltidjawa3@gmail.com",
+    "password": "password"
+}

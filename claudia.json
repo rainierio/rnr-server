@@ -1,0 +1,10 @@
+{
+  "lambda": {
+    "role": "rainierio-web-profile-backend-executor",
+    "name": "rainierio-web-profile-backend",
+    "region": "us-east-2"
+  },
+  "api": {
+    "id": "v27bk06m7l"
+  }
+}
