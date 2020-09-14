@@ -37,16 +37,8 @@
     "nodemon": "^2.0.4"
   },
   "scripts": {
-    "client-install": "npm install --prefix client",
-    "admin-install": "npm install --prefix admin",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node local.js",
-    "server": "nodemon local.js",
-    "client": "npm start --prefix client",
-    "admin": "npm start --prefix admin",
-    "dev": "concurrently \"npm run server\" \"npm run client \" \"npm run admin \"",
-    "dev1": "concurrently \"npm run server\" \"npm run client \"",
-    "dev2": "concurrently \"npm run server\" \"npm run admin \"",
+    "start": "nodemon local.js",
     "init-claudia": "claudia generate-serverless-express-proxy --express-module server",
     "create-api": "claudia create --handler lambda.handler --deploy-proxy-api --region us-east-2",
     "update-api": "claudia --update"
