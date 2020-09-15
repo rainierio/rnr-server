@@ -1,16 +1,14 @@
-const serverless = require("serverless-http");
 const express = require("express");
-
-// 3rd party library
-const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const fileUpload = require("express-fileupload");
 const cors = require("cors");
 const morgan = require("morgan");
+require('dotenv').config();
 
-//Application Routes
-const items = require("./routes/api/items");
+// ----------------------------------
+// Routes Import
+// ----------------------------------
 const clientPage = require("./routes/api/client/ClientPage");
 const about = require("./routes/api/aboutpage");
 const skills = require("./routes/api/skillpage");
@@ -19,7 +17,9 @@ const userauth = require("./routes/api/userauthapi");
 const portfolio = require("./routes/api/PortfolioApi");
 const app = express();
 
-//Middleware
+// ----------------------------------
+// Express configuration
+// ----------------------------------
 app.use(express.static("client/public/"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -32,30 +32,23 @@ app.use(
   })
 );
 
-// DB Config
-const db = require("./config/key").mongoURI;
+// ----------------------------------
+// Database connection
+// ----------------------------------
+const connectDB = require("./config/db");
+connectDB();
 
-// Connect to mongoDB
-mongoose
-  .connect(db, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    useCreateIndex: true,
-  })
-  .then(() => {
-    console.log("MongoDB Connected");
-  })
-  .catch((err) => {
-    console.log(err);
-  });
-
-//Use routes
+// ----------------------------------
+// API's routes
+// ----------------------------------
 app.use("/api/client", clientPage);
-app.use("/api/items", items);
 app.use("/api/about", about);
 app.use("/api/skills", skills);
 app.use("/api/blog", blogs);
 app.use("/api/portfolio", portfolio);
 app.use("/api/userauth", userauth);
 
+// ----------------------------------
+// Express server
+// ----------------------------------
 module.exports = app;

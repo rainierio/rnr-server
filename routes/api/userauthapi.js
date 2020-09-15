@@ -2,14 +2,11 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 
-//Secret key
-const secret = 'EzGDaF0dQvu62UA0UNp7MzbGHLlukzv'
-
 //Skills model
 const UserAuth = require('../../models/Userauthmodel');
 
 // Custom middleware
-const withAuth = require('../../middleware');
+const withAuth = require('../../middleware/Auth');
 
 //@route    GET api/userauth
 //@desc     Get user detail information
@@ -57,7 +54,7 @@ router.post('/authenticate', (req, res) => {
                 }else {
                     //user logged then generate JWT
                     const payload = {email};
-                    let userSession = jwt.sign(payload, secret, {
+                    let userSession = jwt.sign(payload, process.env.JWT_SECRET, {
                         expiresIn: '300m'
                     })
                     res.cookie('USER_SESSION', userSession, { httpOnly: false })

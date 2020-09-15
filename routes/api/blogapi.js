@@ -6,8 +6,8 @@ const { v4: uuidv4 } = require("uuid");
 // Import blog model
 const Blog = require("../../models/Blogmodel");
 
-// Custom middleware
-const withAuth = require("../../middleware");
+// Auth middleware
+const withAuth = require('../../middleware/Auth');
 
 //@route    GET api/blog
 //@desc     Get all article

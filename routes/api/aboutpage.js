@@ -4,8 +4,8 @@ const router = express.Router();
 // import about model
 const About = require('../../models/About');
 
-// Custom middleware
-const withAuth = require('../../middleware');
+// Auth middleware
+const withAuth = require('../../middleware/Auth');
 
 //@route    GET api/about
 //@desc     Get all about information

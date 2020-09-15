@@ -5,7 +5,7 @@ const router = express.Router();
 const Skills = require('../../models/Skillsmodel');
 
 // Custom middleware
-const withAuth = require('../../middleware');
+const withAuth = require('../../middleware/Auth');
 
 //@route    GET api/skills/admin/getskills
 //@desc     Get all skills

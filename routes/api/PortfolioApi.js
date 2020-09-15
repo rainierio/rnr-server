@@ -5,8 +5,8 @@ const { v4: uuidv4 } = require("uuid");
 // import skills model
 const Portfolio = require("../../models/PortfolioModel");
 
-// Custom middleware
-const withAuth = require("../../middleware");
+// Auth middleware
+const withAuth = require('../../middleware/Auth');
 
 //@route    GET api/portfolio/
 //@desc     Get all summary portfolio
