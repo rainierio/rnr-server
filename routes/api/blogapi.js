@@ -1,23 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const stringStrip = require("string-strip-html");
-const AWS = require("aws-sdk");
+const s3UploadPromise = require("../../utility/awsImageUpload");
 
 // Import blog model
 const Blog = require("../../models/Blogmodel");
 
 // Auth middleware
 const withAuth = require("../../middleware/Auth");
-
-// AWS S3 config
-AWS.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION,
-});
-
-// Create S3 instance
-const s3 = new AWS.S3();
 
 //@route    GET api/blog
 //@desc     Get all article
@@ -63,25 +53,8 @@ router.post("/", withAuth, (req, res) => {
 
   if (req.files) {
     let image = Object.values(req.files);
-    const buffer = Buffer.from(image[0].data, "binary");
-    const type = image[0].mimetype;
-    const name = image[0].name;
-    const timestamp = Date.now().toString();
-    const fileName = `blog/${timestamp}-${name}`;
-
-    // Parameters setting
-    const params = {
-      ACL: "public-read",
-      Body: buffer,
-      Bucket: process.env.AWS_S3_BUCKET,
-      ContentType: type,
-      Key: `${fileName}`,
-    };
-
-    s3.upload(params, (err, data) => {
-      if (err) {
-        console.log("Error occured while trying to upload to S3 bucket", err);
-      } else {
+    s3UploadPromise(image[0], "blog")
+      .then((data) => {
         const newArticle = new Blog({
           title: title,
           content: content,
@@ -91,14 +64,27 @@ router.post("/", withAuth, (req, res) => {
           header_img: data.Location,
           author_id: "rainierio",
         });
-        newArticle.save().then((resp) =>
-          res.send({
-            msg: "Article successfully created",
-            resp,
-          })
-        );
-      }
-    });
+        newArticle
+          .save()
+          .then((resp) =>
+            res.send({
+              msg: "Article successfully created",
+              resp,
+            })
+          )
+          .catch((err) =>
+            res.send({
+              err,
+              errorMsg: "Error occured during saving, please try again",
+            })
+          );
+      })
+      .catch((err) =>
+        res.send({
+          err,
+          errorMsg: "Error occured during uploading image, please try again",
+        })
+      );
   } else {
     const newArticle = new Blog({
       title: title,
@@ -122,27 +108,11 @@ router.post("/", withAuth, (req, res) => {
 //@access   Public
 router.put("/:id", withAuth, (req, res) => {
   const { title, content, status, category, tags, image } = req.body;
-  
+
   if (req.files) {
     let image = Object.values(req.files);
-    const buffer = Buffer.from(image[0].data, "binary");
-    const type = image[0].mimetype;
-    const name = image[0].name;
-    const timestamp = Date.now().toString();
-    const fileName = `blog/${timestamp}-${name}`;
-
-    // Parameters setting
-    const params = {
-      ACL: "public-read",
-      Body: buffer,
-      Bucket: process.env.AWS_S3_BUCKET,
-      ContentType: type,
-      Key: `${fileName}`,
-    };
-    s3.upload(params, (err, data) => {
-      if (err) {
-        console.log("Error occured while trying to upload to S3 bucket", err);
-      } else {
+    s3UploadPromise(image[0], "blog")
+      .then((data) => {
         Blog.updateOne(
           { _id: req.params.id },
           {
@@ -156,17 +126,25 @@ router.put("/:id", withAuth, (req, res) => {
             author_id: "rainierio",
           }
         )
-          .then((data) =>
-            res.send({ data, msg: "Article successfully updated" })
+          .then((resp) =>
+            res.send({
+              msg: "Article successfully updated",
+              resp,
+            })
           )
           .catch((err) =>
             res.send({
               err,
-              errMsg: "Post are not successfully updated, please try again",
+              errorMsg: "Error occured during saving, please try again",
             })
           );
-      }
-    });
+      })
+      .catch((err) =>
+        res.send({
+          err,
+          errorMsg: "Error occured during uploading image, please try again",
+        })
+      );
   } else {
     Blog.updateOne(
       { _id: req.params.id },
@@ -181,11 +159,16 @@ router.put("/:id", withAuth, (req, res) => {
         author_id: "rainierio",
       }
     )
-      .then((data) => res.send({ data, msg: "Article successfully updated" }))
+      .then((resp) =>
+        res.send({
+          msg: "Article successfully updated",
+          resp,
+        })
+      )
       .catch((err) =>
         res.send({
           err,
-          errMsg: "Post are not successfully updated, please try again",
+          errorMsg: "Error occured during saving, please try again",
         })
       );
   }

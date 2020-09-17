@@ -1,6 +1,5 @@
 const express = require("express");
 const router = express.Router();
-const { v4: uuidv4 } = require("uuid");
 const s3UploadPromise = require("../../utility/awsImageUpload");
 
 // import skills model
