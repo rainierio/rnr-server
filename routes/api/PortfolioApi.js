@@ -68,8 +68,42 @@ router.post("/", withAuth, (req, res) => {
           );
       } else {
         // Proceed multiple image
-        img.map((item) => {
-          //console.log(img);
+        let totalImage = img.length;
+        img.map((image) => {
+          s3UploadPromise(image, "portfolio")
+            .then((data) => {
+              imageArray.push(data.Location);
+              if (totalImage == imageArray.length) {
+                Portfolio.create({
+                  title,
+                  status,
+                  description,
+                  category,
+                  company,
+                  url,
+                  image: imageArray,
+                })
+                  .then((portfolio) => {
+                    res.send({
+                      portfolio,
+                      successMsg: "New portfolio created",
+                    });
+                  })
+                  .catch((err) =>
+                    res.send({
+                      err,
+                      errorMsg: "Error occured during saving, please try again",
+                    })
+                  );
+              }
+            })
+            .catch((err) =>
+              res.send({
+                err,
+                errorMsg:
+                  "Error occured during uploading image, please try again",
+              })
+            );
         });
       }
     });
@@ -100,7 +134,6 @@ router.post("/", withAuth, (req, res) => {
 router.put("/:id", withAuth, (req, res, next) => {
   const { title, status, description, category, company, url } = req.body;
   let imageArray = [];
-  let uuid = uuidv4();
   // Set previous image before add the new images
   if (req.body.uploadedImages !== "") {
     imageArray.push(...req.body.uploadedImages.split(","));
@@ -148,9 +181,45 @@ router.put("/:id", withAuth, (req, res, next) => {
           );
       } else {
         // Proceed multiple image
-        img.map((item) => {
-          item.mv("client/public/portfolio/" + uuid + "_" + item.name);
-          imageArray.push(uuid + "_" + item.name);
+        let totalImage = img.length + imageArray.length;
+        img.map((image) => {
+          s3UploadPromise(image, "portfolio")
+            .then((data) => {
+              imageArray.push(data.Location);
+              if (totalImage == imageArray.length) {
+                Portfolio.findByIdAndUpdate(
+                  { _id: req.params.id },
+                  {
+                    title,
+                    status,
+                    description,
+                    category,
+                    company,
+                    url,
+                    image: imageArray,
+                  },
+                  {
+                    new: true,
+                  }
+                )
+                  .then((portfolio) =>
+                    res.send({ portfolio, successMsg: "Record updated" })
+                  )
+                  .catch((err) =>
+                    res.send({
+                      err,
+                      errorMsg: "Error occured during update, please try again",
+                    })
+                  );
+              }
+            })
+            .catch((err) =>
+              res.send({
+                err,
+                errorMsg:
+                  "Error occured during uploading image, please try again",
+              })
+            );
         });
       }
     });

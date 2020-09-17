@@ -83,7 +83,6 @@ router.get("/portfolios", async (req, res) => {
 //@desc     Get portfolio details
 //@access   Public
 router.get("/portfoliodetail/:id", (req, res) => {
-  console.log("in");
   Portfolio.findOne({ _id: req.params.id })
     .then((portfolio) => res.json(portfolio))
     .catch((err) => res.json(err));
