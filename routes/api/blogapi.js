@@ -1,13 +1,23 @@
 const express = require("express");
 const router = express.Router();
 const stringStrip = require("string-strip-html");
-const { v4: uuidv4 } = require("uuid");
+const AWS = require("aws-sdk");
 
 // Import blog model
 const Blog = require("../../models/Blogmodel");
 
 // Auth middleware
-const withAuth = require('../../middleware/Auth');
+const withAuth = require("../../middleware/Auth");
+
+// AWS S3 config
+AWS.config.update({
+  accessKeyId: process.env.AWS_ACCESS_KEY,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION,
+});
+
+// Create S3 instance
+const s3 = new AWS.S3();
 
 //@route    GET api/blog
 //@desc     Get all article
@@ -49,70 +59,136 @@ router.get("/:id", withAuth, (req, res) => {
 //@desc     Create new article
 //@access   Admin
 router.post("/", withAuth, (req, res) => {
-  let uuid = uuidv4();
   const { title, content, status, category, tags } = req.body;
-  let imageContainer = "";
 
   if (req.files) {
     let image = Object.values(req.files);
-    image[0].mv("client/public/blogs/" + uuid + image[0].name);
-    imageContainer = uuid + image[0].name;
-  }
+    const buffer = Buffer.from(image[0].data, "binary");
+    const type = image[0].mimetype;
+    const name = image[0].name;
+    const timestamp = Date.now().toString();
+    const fileName = `blog/${timestamp}-${name}`;
 
-  const newArticle = new Blog({
-    title: title,
-    content: content,
-    status: status,
-    category: category,
-    tags: tags,
-    header_img: imageContainer,
-    author_id: "rainierio",
-  });
-  newArticle.save().then((resp) =>
-    res.send({
-      msg: "Article successfully created",
-      resp,
-    })
-  );
+    // Parameters setting
+    const params = {
+      ACL: "public-read",
+      Body: buffer,
+      Bucket: process.env.AWS_S3_BUCKET,
+      ContentType: type,
+      Key: `${fileName}`,
+    };
+
+    s3.upload(params, (err, data) => {
+      if (err) {
+        console.log("Error occured while trying to upload to S3 bucket", err);
+      } else {
+        const newArticle = new Blog({
+          title: title,
+          content: content,
+          status: status,
+          category: category,
+          tags: tags,
+          header_img: data.Location,
+          author_id: "rainierio",
+        });
+        newArticle.save().then((resp) =>
+          res.send({
+            msg: "Article successfully created",
+            resp,
+          })
+        );
+      }
+    });
+  } else {
+    const newArticle = new Blog({
+      title: title,
+      content: content,
+      status: status,
+      category: category,
+      tags: tags,
+      author_id: "rainierio",
+    });
+    newArticle.save().then((resp) =>
+      res.send({
+        msg: "Article successfully created",
+        resp,
+      })
+    );
+  }
 });
 
 //@route    PUT api/blog/id
 //@desc     Update article
 //@access   Public
 router.put("/:id", withAuth, (req, res) => {
-  let uuid = uuidv4();
   const { title, content, status, category, tags, image } = req.body;
-  let imageContainer = "";
-
+  
   if (req.files) {
     let image = Object.values(req.files);
-    image[0].mv("client/public/blogs/" + uuid + image[0].name);
-    imageContainer = uuid + image[0].name;
-  } else {
-    imageContainer = image;
-    console.log(imageContainer);
-  }
+    const buffer = Buffer.from(image[0].data, "binary");
+    const type = image[0].mimetype;
+    const name = image[0].name;
+    const timestamp = Date.now().toString();
+    const fileName = `blog/${timestamp}-${name}`;
 
-  Blog.updateOne(
-    { _id: req.params.id },
-    {
-      title: title,
-      content: content,
-      status: status,
-      updatedAt: Date.now(),
-      category: category,
-      tags: tags,
-      header_img: imageContainer,
-      author_id: "rainierio",
-    }
-  )
-    .then((data) => res.send({ data, msg: "Article successfully updated" }))
-    .catch((err) =>
-      res.send({
-        err,
-        errMsg: "Post are not successfully updated, please try again",
-      })
-    );
+    // Parameters setting
+    const params = {
+      ACL: "public-read",
+      Body: buffer,
+      Bucket: process.env.AWS_S3_BUCKET,
+      ContentType: type,
+      Key: `${fileName}`,
+    };
+    s3.upload(params, (err, data) => {
+      if (err) {
+        console.log("Error occured while trying to upload to S3 bucket", err);
+      } else {
+        Blog.updateOne(
+          { _id: req.params.id },
+          {
+            title: title,
+            content: content,
+            status: status,
+            updatedAt: Date.now(),
+            category: category,
+            tags: tags,
+            header_img: data.Location,
+            author_id: "rainierio",
+          }
+        )
+          .then((data) =>
+            res.send({ data, msg: "Article successfully updated" })
+          )
+          .catch((err) =>
+            res.send({
+              err,
+              errMsg: "Post are not successfully updated, please try again",
+            })
+          );
+      }
+    });
+  } else {
+    Blog.updateOne(
+      { _id: req.params.id },
+      {
+        title: title,
+        content: content,
+        status: status,
+        updatedAt: Date.now(),
+        category: category,
+        tags: tags,
+        header_img: image,
+        author_id: "rainierio",
+      }
+    )
+      .then((data) => res.send({ data, msg: "Article successfully updated" }))
+      .catch((err) =>
+        res.send({
+          err,
+          errMsg: "Post are not successfully updated, please try again",
+        })
+      );
+  }
 });
 
 //@route    DELETE api/blog/id

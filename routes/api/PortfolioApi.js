@@ -1,12 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const { v4: uuidv4 } = require("uuid");
+const s3UploadPromise = require("../../utility/awsImageUpload");
 
 // import skills model
 const Portfolio = require("../../models/PortfolioModel");
 
 // Auth middleware
-const withAuth = require('../../middleware/Auth');
+const withAuth = require("../../middleware/Auth");
 
 //@route    GET api/portfolio/
 //@desc     Get all summary portfolio
@@ -28,41 +29,69 @@ router.get("/detail/:id", (req, res, next) => {
 //@desc     Add new portfolio
 //@access   Admin
 router.post("/", withAuth, (req, res) => {
+  const { title, status, description, category, company, url } = req.body;
   let imageArray = [];
-  let uuid = uuidv4();
+
   if (req.files) {
     let image = Object.values(req.files);
     image.map((img) => {
       // Proceed one image
       if (img.length === undefined) {
-        img.mv("client/public/portfolio/" + uuid + "_" + img.name);
-        imageArray.push(uuid + "_" + img.name);
+        s3UploadPromise(img, "portfolio")
+          .then((data) => {
+            imageArray.push(data.Location);
+            Portfolio.create({
+              title,
+              status,
+              description,
+              category,
+              company,
+              url,
+              image: imageArray,
+            })
+              .then((portfolio) => {
+                res.send({ portfolio, successMsg: "New portfolio created" });
+              })
+              .catch((err) =>
+                res.send({
+                  err,
+                  errorMsg: "Error occured during saving, please try again",
+                })
+              );
+          })
+          .catch((err) =>
+            res.send({
+              err,
+              errorMsg:
+                "Error occured during uploading image, please try again",
+            })
+          );
       } else {
         // Proceed multiple image
         img.map((item) => {
-          item.mv("client/public/portfolio/" + uuid + "_" + item.name);
-          imageArray.push(uuid + "_" + item.name);
+          //console.log(img);
         });
       }
     });
-  }
-  const { title, status, description, category, company, url } = req.body;
-
-  // const newPortfolio = new Portfolio(req.body);
-  // newPortfolio
-  Portfolio.create({
-    title,
-    status,
-    description,
-    category,
-    company,
-    url,
-    image: imageArray,
-  })
-    .then((portfolio) => {
-      res.send({ portfolio, successMsg: "New portfolio created" });
+  } else {
+    Portfolio.create({
+      title,
+      status,
+      description,
+      category,
+      company,
+      url,
     })
-    .catch((err) => res.send({ err, errorMsg: "New portfolio not created" }));
+      .then((portfolio) => {
+        res.send({ portfolio, successMsg: "New portfolio created" });
+      })
+      .catch((err) =>
+        res.send({
+          err,
+          errorMsg: "Error occured during saving, please try again",
+        })
+      );
+  }
 });
 
 //@route    PUT api/portfolio/:id
@@ -82,8 +111,41 @@ router.put("/:id", withAuth, (req, res, next) => {
     image.map((img) => {
       // Proceed one image
       if (img.length === undefined) {
-        img.mv("client/public/portfolio/" + uuid + "_" + img.name);
-        imageArray.push(uuid + "_" + img.name);
+        s3UploadPromise(img, "portfolio")
+          .then((data) => {
+            imageArray.push(data.Location);
+            Portfolio.findByIdAndUpdate(
+              { _id: req.params.id },
+              {
+                title,
+                status,
+                description,
+                category,
+                company,
+                url,
+                image: imageArray,
+              },
+              {
+                new: true,
+              }
+            )
+              .then((portfolio) =>
+                res.send({ portfolio, successMsg: "Record updated" })
+              )
+              .catch((err) =>
+                res.send({
+                  err,
+                  errorMsg: "Error occured during update, please try again",
+                })
+              );
+          })
+          .catch((err) =>
+            res.send({
+              err,
+              errorMsg:
+                "Error occured during uploading image, please try again",
+            })
+          );
       } else {
         // Proceed multiple image
         img.map((item) => {
@@ -92,25 +154,32 @@ router.put("/:id", withAuth, (req, res, next) => {
         });
       }
     });
+  } else {
+    Portfolio.findByIdAndUpdate(
+      { _id: req.params.id },
+      {
+        title,
+        status,
+        description,
+        category,
+        company,
+        url,
+        image: imageArray,
+      },
+      {
+        new: true,
+      }
+    )
+      .then((portfolio) =>
+        res.send({ portfolio, successMsg: "Record updated" })
+      )
+      .catch((err) =>
+        res.send({
+          err,
+          errorMsg: "Error occured during update, please try again",
+        })
+      );
   }
-
-  Portfolio.findByIdAndUpdate(
-    { _id: req.params.id },
-    {
-      title,
-      status,
-      description,
-      category,
-      company,
-      url,
-      image: imageArray,
-    },
-    {
-      new: true,
-    }
-  )
-    .then((portfolio) => res.send({ portfolio, successMsg: "Record updated" }))
-    .catch((err) => res.send({ err, errorMsg: "Error update" }));
 });
 
 //@route    DELETE api/portfolio/:id

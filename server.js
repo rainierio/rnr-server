@@ -3,7 +3,7 @@ const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const fileUpload = require("express-fileupload");
 const cors = require("cors");
-const morgan = require("morgan");
+// const morgan = require("morgan");
 require('dotenv').config();
 
 // ----------------------------------
@@ -25,13 +25,12 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors());
-app.use(morgan("dev"));
 app.use(
   fileUpload({
     createParentPath: true,
   })
 );
-
+// app.use(morgan("dev"));
 // ----------------------------------
 // Database connection
 // ----------------------------------
