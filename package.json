@@ -42,7 +42,6 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "localdev": "nodemon server.js",
     "start": "node server.js"
   },
   "author": "rainier letidjawa",
