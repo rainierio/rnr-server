@@ -35,9 +35,7 @@
     "string-strip-html": "^4.3.18",
     "uuid": "^8.3.0"
   },
-  "engines": {
-    "node": "v12.9.1"
-  },
+
   "devDependencies": {
     "claudia": "^5.12.0",
     "nodemon": "^2.0.4"
