@@ -35,12 +35,9 @@
     "string-strip-html": "^4.3.18",
     "uuid": "^8.3.0"
   },
-  
   "engines": {
-    "node": ">=10.0.0",
-    "npm": ">=6.0.0"
+    "node": ">=10.15"
   },
-
   "devDependencies": {
     "claudia": "^5.12.0",
     "nodemon": "^2.0.4"
