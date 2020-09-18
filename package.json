@@ -41,10 +41,9 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon local.js",
-    "init-claudia": "claudia generate-serverless-express-proxy --express-module server",
-    "create-api": "claudia create --handler lambda.handler --deploy-proxy-api --region us-east-2",
-    "update-api": "claudia --update"
+    "localdev": "nodemon server.js",
+    "start": "nodemon server.js"
+    
   },
   "author": "rainier letidjawa",
   "license": "MIT"

@@ -4,7 +4,7 @@ const cookieParser = require("cookie-parser");
 const fileUpload = require("express-fileupload");
 const cors = require("cors");
 // const morgan = require("morgan");
-require('dotenv').config();
+require("dotenv").config();
 
 // ----------------------------------
 // Routes Import
@@ -47,7 +47,12 @@ app.use("/api/blog", blogs);
 app.use("/api/portfolio", portfolio);
 app.use("/api/userauth", userauth);
 
+const port = process.env.PORT || 5000;
+
+app.listen(port, () => {
+  console.log(`Server started on port ${port}`);
+});
 // ----------------------------------
-// Express server
+// Express server => claudia upload
 // ----------------------------------
-module.exports = app;
+// module.exports = app;
