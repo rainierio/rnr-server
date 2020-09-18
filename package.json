@@ -36,7 +36,7 @@
     "uuid": "^8.3.0"
   },
   "engines": {
-    "node": ">=10.15"
+    "node": "v12.9.1"
   },
   "devDependencies": {
     "claudia": "^5.12.0",
