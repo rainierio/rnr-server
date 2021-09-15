@@ -11,7 +11,7 @@ const withAuth = require('../../middleware/Auth');
 //@desc     Get all skills
 //@access   Admin
 router.get('/admin/getskills', withAuth, (req, res, next) => {
-    Skills.find()
+Skills.find()
     .then(skills => res.json(skills))
  });
 
