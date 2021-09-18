@@ -52,7 +52,4 @@ const port = process.env.PORT || 5000;
 app.listen(port, () => {
   console.log(`Server started on port ${port}`);
 });
-// ----------------------------------
-// Express server => claudia upload
-// ----------------------------------
-// module.exports = app;
+
